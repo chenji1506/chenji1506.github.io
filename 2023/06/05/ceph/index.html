@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+<script>
+    (function(){
+        if(''){
+            if (prompt('请输入文章密码') !== ''){
+                alert('密码错误！');
+                history.back();
+            }
+        }
+    })();
+</script>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Ceph," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="环境 123192.168.0.14	ceph-01192.168.0.15	ceph-02192.168.0.16	ceph-03  配置主机名 123[root@ceph-01 ~]# hostnamectl set-hostname ceph-01[root@ceph-02 ~]# hostnamectl set-hostname ceph-02[root@ceph-03 ~]# host">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rocky8.5 部署 Ceph">
+<meta property="og:url" content="http://example.com/2023/06/05/ceph/index.html">
+<meta property="og:site_name" content="CJ">
+<meta property="og:description" content="环境 123192.168.0.14	ceph-01192.168.0.15	ceph-02192.168.0.16	ceph-03  配置主机名 123[root@ceph-01 ~]# hostnamectl set-hostname ceph-01[root@ceph-02 ~]# hostnamectl set-hostname ceph-02[root@ceph-03 ~]# host">
+<meta property="og:locale">
+<meta property="article:published_time" content="2023-06-04T16:29:14.000Z">
+<meta property="article:modified_time" content="2025-09-16T09:06:20.102Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Ceph">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://example.com/2023/06/05/ceph/"/>
+
+
+
+
+
+  <title>Rocky8.5 部署 Ceph | CJ</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.0.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CJ</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a href="/sitemap.xml%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br />
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/06/05/ceph/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CJ">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Rocky8.5 部署 Ceph</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2023-06-05T00:29:14+08:00">
+                2023-06-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%98%E5%82%A8/" itemprop="url" rel="index">
+                    <span itemprop="name">存储</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <ul>
+<li><p>环境</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.0.14	ceph-01</span><br><span class="line">192.168.0.15	ceph-02</span><br><span class="line">192.168.0.16	ceph-03</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置主机名</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@ceph-01 ~]# hostnamectl set-hostname ceph-01</span><br><span class="line">[root@ceph-02 ~]# hostnamectl set-hostname ceph-02</span><br><span class="line">[root@ceph-03 ~]# hostnamectl set-hostname ceph-03</span><br></pre></td></tr></table></figure></li>
+</ul>
+<span id="more"></span>
+
+<ul>
+<li><p>配置免密</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@ceph-01 ~]# ssh-keygen -t rsa</span><br><span class="line">[root@ceph-01 ~]# ssh-copy-id 192.168.0.14</span><br><span class="line">[root@ceph-01 ~]# ssh-copy-id 192.168.0.15</span><br><span class="line">[root@ceph-01 ~]# ssh-copy-id 192.168.0.16</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>安装 docker</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 三个节点都要安装</span></span><br><span class="line">[root@ceph-01 ~]# dnf install epel* -y</span><br><span class="line">[root@ceph-01 ~]# dnf install ceph-mon ceph-osd ceph-mds ceph-radosgw -y</span><br><span class="line">[root@ceph-01 ~]# curl -o /etc/yum.repos.d/docker-ce.repo https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/centos/docker-ce.repo</span><br><span class="line">[root@ceph-01 ~]# dnf install docker-ce lvm2 -y</span><br><span class="line">[root@ceph-01 ~]# systemctl <span class="built_in">enable</span> --now docker</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>时间同步</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 服务端(192.168.0.14)</span></span><br><span class="line">[root@ceph-01 ~]# dnf install chrony -y</span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置</span></span><br><span class="line">[root@ceph-01 ~]# vim /etc/chrony.conf</span><br><span class="line"></span><br><span class="line">pool ntp.aliyun.com iburst</span><br><span class="line">driftfile /var/lib/chrony/drift</span><br><span class="line">makestep 1.0 3</span><br><span class="line">rtcsync</span><br><span class="line">allow 192.168.1.0/24</span><br><span class="line"><span class="built_in">local</span> stratum 10</span><br><span class="line">keyfile /etc/chrony.keys</span><br><span class="line">leapsectz right/UTC</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# systemctl <span class="built_in">enable</span> --now chronyd </span><br><span class="line"></span><br><span class="line"><span class="comment"># 客户端</span></span><br><span class="line">dnf install chrony -y</span><br><span class="line">vim /etc/chrony.conf</span><br><span class="line"></span><br><span class="line">pool 192.168.0.14 iburst</span><br><span class="line">driftfile /var/lib/chrony/drift</span><br><span class="line">makestep 1.0 3</span><br><span class="line">rtcsync</span><br><span class="line">keyfile /etc/chrony.keys</span><br><span class="line">leapsectz right/UTC</span><br><span class="line">logdir /var/log/chrony</span><br><span class="line"></span><br><span class="line">systemctl <span class="built_in">enable</span> --now chronyd</span><br><span class="line"></span><br><span class="line"><span class="comment"># 客户端验证</span></span><br><span class="line">chronyc sources -v</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>安装 ceph 集群</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装 cephadm 工具</span></span><br><span class="line">[root@ceph-01 ~]# curl --silent --remote-name --location https://mirrors.chenby.cn/https://github.com/ceph/ceph/raw/quincy/src/cephadm/cephadm</span><br><span class="line">[root@ceph-01 ~]# <span class="built_in">chmod</span> +x cephadm</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建源信息</span></span><br><span class="line">[root@ceph-01 ~]# ./cephadm add-repo --release 17.2.5</span><br><span class="line">[root@ceph-01 ~]# sed -i <span class="string">&#x27;s#download.ceph.com#mirrors.ustc.edu.cn/ceph#&#x27;</span> /etc/yum.repos.d/ceph.repo </span><br><span class="line">[root@ceph-01 ~]# ./cephadm install</span><br><span class="line"></span><br><span class="line"><span class="comment"># 引导集群</span></span><br><span class="line">[root@ceph-01 ~]# cephadm bootstrap --mon-ip 192.168.0.14</span><br><span class="line">Creating directory /etc/ceph <span class="keyword">for</span> ceph.conf</span><br><span class="line">Verifying podman|docker is present...</span><br><span class="line">Verifying lvm2 is present...</span><br><span class="line">Verifying <span class="keyword">time</span> synchronization is <span class="keyword">in</span> place...</span><br><span class="line">Unit chronyd.service is enabled and running</span><br><span class="line">Repeating the final host check...</span><br><span class="line">docker (/usr/bin/docker) is present</span><br><span class="line">systemctl is present</span><br><span class="line">lvcreate is present</span><br><span class="line">Unit chronyd.service is enabled and running</span><br><span class="line">Host looks OK</span><br><span class="line">Cluster fsid: 642858bc-9714-11ed-9e73-fa163e075f6d</span><br><span class="line">Verifying IP 192.168.0.14 port 3300 ...</span><br><span class="line">Verifying IP 192.168.0.14 port 6789 ...</span><br><span class="line">Mon IP `192.168.0.14` is <span class="keyword">in</span> CIDR network `192.168.0.0/24`</span><br><span class="line">Mon IP `192.168.0.14` is <span class="keyword">in</span> CIDR network `192.168.0.0/24`</span><br><span class="line">Internal network (--cluster-network) has not been provided, OSD replication will default to the public_network</span><br><span class="line">Pulling container image quay.io/ceph/ceph:v17...</span><br><span class="line">Ceph version: ceph version 17.2.5 (98318ae89f1a893a6ded3a640405cdbb33e08757) quincy (stable)</span><br><span class="line">Extracting ceph user uid/gid from container image...</span><br><span class="line">Creating initial keys...</span><br><span class="line">Creating initial monmap...</span><br><span class="line">Creating mon...</span><br><span class="line">Waiting <span class="keyword">for</span> mon to start...</span><br><span class="line">Waiting <span class="keyword">for</span> mon...</span><br><span class="line">mon is available</span><br><span class="line">Assimilating anything we can from ceph.conf...</span><br><span class="line">Generating new minimal ceph.conf...</span><br><span class="line">Restarting the monitor...</span><br><span class="line">Setting mon public_network to 192.168.0.0/24</span><br><span class="line">Wrote config to /etc/ceph/ceph.conf</span><br><span class="line">Wrote keyring to /etc/ceph/ceph.client.admin.keyring</span><br><span class="line">Creating mgr...</span><br><span class="line">Verifying port 9283 ...</span><br><span class="line">Waiting <span class="keyword">for</span> mgr to start...</span><br><span class="line">Waiting <span class="keyword">for</span> mgr...</span><br><span class="line">mgr not available, waiting (1/15)...</span><br><span class="line">mgr not available, waiting (2/15)...</span><br><span class="line">mgr not available, waiting (3/15)...</span><br><span class="line">mgr not available, waiting (4/15)...</span><br><span class="line">mgr is available</span><br><span class="line">Enabling cephadm module...</span><br><span class="line">Waiting <span class="keyword">for</span> the mgr to restart...</span><br><span class="line">Waiting <span class="keyword">for</span> mgr epoch 5...</span><br><span class="line">mgr epoch 5 is available</span><br><span class="line">Setting orchestrator backend to cephadm...</span><br><span class="line">Generating ssh key...</span><br><span class="line">Wrote public SSH key to /etc/ceph/ceph.pub</span><br><span class="line">Adding key to root@localhost authorized_keys...</span><br><span class="line">Adding host ceph-01...</span><br><span class="line">Deploying mon service with default placement...</span><br><span class="line">Deploying mgr service with default placement...</span><br><span class="line">Deploying crash service with default placement...</span><br><span class="line">Deploying prometheus service with default placement...</span><br><span class="line">Deploying grafana service with default placement...</span><br><span class="line">Deploying node-exporter service with default placement...</span><br><span class="line">Deploying alertmanager service with default placement...</span><br><span class="line">Enabling the dashboard module...</span><br><span class="line">Waiting <span class="keyword">for</span> the mgr to restart...</span><br><span class="line">Waiting <span class="keyword">for</span> mgr epoch 9...</span><br><span class="line">mgr epoch 9 is available</span><br><span class="line">Generating a dashboard self-signed certificate...</span><br><span class="line">Creating initial admin user...</span><br><span class="line">Fetching dashboard port number...</span><br><span class="line">Ceph Dashboard is now available at:</span><br><span class="line"></span><br><span class="line">	     URL: https://ceph-01:8443/</span><br><span class="line">	    User: admin</span><br><span class="line">	Password: k6qfw0g8l8</span><br><span class="line"></span><br><span class="line">Enabling client.admin keyring and conf on hosts with <span class="string">&quot;admin&quot;</span> label</span><br><span class="line">Saving cluster configuration to /var/lib/ceph/642858bc-9714-11ed-9e73-fa163e075f6d/config directory</span><br><span class="line">Enabling autotune <span class="keyword">for</span> osd_memory_target</span><br><span class="line">You can access the Ceph CLI as following <span class="keyword">in</span> <span class="keyword">case</span> of multi-cluster or non-default config:</span><br><span class="line"></span><br><span class="line">	<span class="built_in">sudo</span> /usr/sbin/cephadm shell --fsid 642858bc-9714-11ed-9e73-fa163e075f6d -c /etc/ceph/ceph.conf -k /etc/ceph/ceph.client.admin.keyring</span><br><span class="line"></span><br><span class="line">Or, <span class="keyword">if</span> you are only running a single cluster on this host:</span><br><span class="line"></span><br><span class="line">	<span class="built_in">sudo</span> /usr/sbin/cephadm shell </span><br><span class="line"></span><br><span class="line">Please consider enabling telemetry to <span class="built_in">help</span> improve Ceph:</span><br><span class="line"></span><br><span class="line">	ceph telemetry on</span><br><span class="line"></span><br><span class="line">For more information see:</span><br><span class="line"></span><br><span class="line">	https://docs.ceph.com/docs/master/mgr/telemetry/</span><br><span class="line"></span><br><span class="line">Bootstrap complete.</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看容器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[root@ceph-01 ~]# docker images</span><br><span class="line">REPOSITORY                        TAG       IMAGE ID       CREATED         SIZE</span><br><span class="line">quay.io/ceph/ceph                 v17       cc65afd6173a   3 months ago    1.36GB</span><br><span class="line">quay.io/prometheus/alertmanager   v0.23.0   ba2b418f427c   17 months ago   57.5MB</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# docker ps</span><br><span class="line">CONTAINER ID   IMAGE                                     COMMAND                  CREATED              STATUS              PORTS     NAMES</span><br><span class="line">9126eb49b75d   quay.io/ceph/ceph                         <span class="string">&quot;/usr/bin/ceph-crash…&quot;</span>   About a minute ago   Up About a minute             ceph-642858bc-9714-11ed-9e73-fa163e075f6d-crash-ceph-01</span><br><span class="line">5793f4280687   quay.io/prometheus/alertmanager:v0.23.0   <span class="string">&quot;/bin/alertmanager -…&quot;</span>   About a minute ago   Up About a minute             ceph-642858bc-9714-11ed-9e73-fa163e075f6d-alertmanager-ceph-01</span><br><span class="line">36aa03ac5393   quay.io/ceph/ceph:v17                     <span class="string">&quot;/usr/bin/ceph-mgr -…&quot;</span>   3 minutes ago        Up 3 minutes                  ceph-642858bc-9714-11ed-9e73-fa163e075f6d-mgr-ceph-01-fsikhk</span><br><span class="line">78345de76bca   quay.io/ceph/ceph:v17                     <span class="string">&quot;/usr/bin/ceph-mon -…&quot;</span>   3 minutes ago        Up 3 minutes                  ceph-642858bc-9714-11ed-9e73-fa163e075f6d-mon-ceph-01</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 shell 命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 切换模式</span></span><br><span class="line">[root@ceph-01 ~]# cephadm shell</span><br><span class="line">Inferring fsid 642858bc-9714-11ed-9e73-fa163e075f6d</span><br><span class="line">Inferring config /var/lib/ceph/642858bc-9714-11ed-9e73-fa163e075f6d/mon.ceph-01/config</span><br><span class="line">Using ceph image with <span class="built_in">id</span> <span class="string">&#x27;cc65afd6173a&#x27;</span> and tag <span class="string">&#x27;v17&#x27;</span> created on 2022-10-18 07:41:41 +0800 CST</span><br><span class="line">quay.io/ceph/ceph@sha256:0560b16bec6e84345f29fb6693cd2430884e6efff16a95d5bdd0bb06d7661c45</span><br><span class="line"></span><br><span class="line">[ceph: root@ceph-01 /]# ceph -s</span><br><span class="line">  cluster:</span><br><span class="line">    <span class="built_in">id</span>:     642858bc-9714-11ed-9e73-fa163e075f6d</span><br><span class="line">    health: HEALTH_WARN</span><br><span class="line">            OSD count 0 &lt; osd_pool_default_size 3</span><br><span class="line"> </span><br><span class="line">  services:</span><br><span class="line">    mon: 1 daemons, quorum ceph-01 (age 6m)</span><br><span class="line">    mgr: ceph-01.fsikhk(active, since 99s)</span><br><span class="line">    osd: 0 osds: 0 up, 0 <span class="keyword">in</span></span><br><span class="line"> </span><br><span class="line">  data:</span><br><span class="line">    pools:   0 pools, 0 pgs</span><br><span class="line">    objects: 0 objects, 0 B</span><br><span class="line">    usage:   0 B used, 0 B / 0 B avail</span><br><span class="line">    pgs:</span><br><span class="line">      </span><br><span class="line"><span class="comment"># 查看目录集群内运行的组件（包括其他节点）</span></span><br><span class="line">[ceph: root@ceph-01 /]# ceph orch ps</span><br><span class="line">NAME                   HOST     PORTS        STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID  </span><br><span class="line">alertmanager.ceph-01   ceph-01  *:9093,9094  running (20s)    11s ago   5m    16.2M        -           ba2b418f427c  171435b3d2fd  </span><br><span class="line">crash.ceph-01          ceph-01               running (5m)     11s ago   5m    6920k        -  17.2.5   cc65afd6173a  9126eb49b75d  </span><br><span class="line">grafana.ceph-01        ceph-01  *:3000       running (17s)    11s ago   2m    37.9M        -  8.3.5    dad864ee21e9  19b27ffbe53d  </span><br><span class="line">mgr.ceph-01.fsikhk     ceph-01  *:9283       running (6m)     11s ago   6m     455M        -  17.2.5   cc65afd6173a  36aa03ac5393  </span><br><span class="line">mon.ceph-01            ceph-01               running (6m)     11s ago   6m    43.4M    2048M  17.2.5   cc65afd6173a  78345de76bca  </span><br><span class="line">node-exporter.ceph-01  ceph-01  *:9100       running (2m)     11s ago   2m    9748k        -           1dbe0e931976  fc01fd2a4a22  </span><br><span class="line">prometheus.ceph-01     ceph-01  *:9095       running (29s)    11s ago  29s    27.5M        -           514e6a882f6e  f0f6a7be2cf8  </span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看某一组件的状态</span></span><br><span class="line">[ceph: root@ceph-01 /]# ceph orch ps --daemon-type mon</span><br><span class="line">NAME         HOST     PORTS  STATUS        REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID  </span><br><span class="line">mon.ceph-01  ceph-01         running (7m)    44s ago   7m    43.4M    2048M  17.2.5   cc65afd6173a  78345de76bca  </span><br><span class="line"></span><br><span class="line"><span class="comment"># 退出命令模式</span></span><br><span class="line">[ceph: root@ceph-01 /]# <span class="built_in">exit</span></span><br><span class="line"><span class="built_in">exit</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ceph 命令第二种用法</span></span><br><span class="line">[root@ceph-01 ~]# cephadm shell -- ceph -s</span><br><span class="line">Inferring fsid 642858bc-9714-11ed-9e73-fa163e075f6d</span><br><span class="line">Inferring config /var/lib/ceph/642858bc-9714-11ed-9e73-fa163e075f6d/mon.ceph-01/config</span><br><span class="line">Using ceph image with <span class="built_in">id</span> <span class="string">&#x27;cc65afd6173a&#x27;</span> and tag <span class="string">&#x27;v17&#x27;</span> created on 2022-10-18 07:41:41 +0800 CST</span><br><span class="line">quay.io/ceph/ceph@sha256:0560b16bec6e84345f29fb6693cd2430884e6efff16a95d5bdd0bb06d7661c45</span><br><span class="line">  cluster:</span><br><span class="line">    <span class="built_in">id</span>:     642858bc-9714-11ed-9e73-fa163e075f6d</span><br><span class="line">    health: HEALTH_WARN</span><br><span class="line">            OSD count 0 &lt; osd_pool_default_size 3</span><br><span class="line"> </span><br><span class="line">  services:</span><br><span class="line">    mon: 1 daemons, quorum ceph-01 (age 8m)</span><br><span class="line">    mgr: ceph-01.fsikhk(active, since 3m)</span><br><span class="line">    osd: 0 osds: 0 up, 0 <span class="keyword">in</span></span><br><span class="line"> </span><br><span class="line">  data:</span><br><span class="line">    pools:   0 pools, 0 pgs</span><br><span class="line">    objects: 0 objects, 0 B</span><br><span class="line">    usage:   0 B used, 0 B / 0 B avail</span><br><span class="line">    pgs:</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>安装 ceph-common 包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装</span></span><br><span class="line">[root@ceph-01 ~]# cephadm install ceph-common</span><br><span class="line">Installing packages [<span class="string">&#x27;ceph-common&#x27;</span>]...</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看版本</span></span><br><span class="line">[root@ceph-01 ~]# ceph -v</span><br><span class="line">ceph version 17.2.5 (98318ae89f1a893a6ded3a640405cdbb33e08757) quincy (stable)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启用 ceph 组件</span></span><br><span class="line">[root@ceph-01 ~]# ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-02</span><br><span class="line">[root@ceph-01 ~]# ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-03</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建 mon 和 mgr</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建 mon 和 mgr</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch host add ceph-02</span><br><span class="line">[root@ceph-01 ~]# ceph orch host add ceph-03</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看集群的节点</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch host <span class="built_in">ls</span></span><br><span class="line">HOST     ADDR          LABELS  STATUS  </span><br><span class="line">ceph-01  192.168.0.14  _admin          </span><br><span class="line">ceph-02  192.168.0.15                  </span><br><span class="line">ceph-03  192.168.0.16                  </span><br><span class="line">3 hosts <span class="keyword">in</span> cluster</span><br><span class="line"></span><br><span class="line"><span class="comment"># ceph 集群默认会允许存在5个 mon 和2个 mgr，可以使用 ceph orch apply 手动修改</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch apply mon --placement=<span class="string">&quot;3 ceph-01 ceph-02 ceph-03&quot;</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch apply mgr --placement=<span class="string">&quot;3 ceph-01 ceph-02 ceph-03&quot;</span></span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# ceph orch <span class="built_in">ls</span></span><br><span class="line">NAME           PORTS        RUNNING  REFRESHED  AGE  PLACEMENT                        </span><br><span class="line">alertmanager   ?:9093,9094      1/1  4m ago     21m  count:1                          </span><br><span class="line">crash                           1/2  4m ago     21m  *                                </span><br><span class="line">grafana        ?:3000           1/1  4m ago     21m  count:1                          </span><br><span class="line">mgr                             1/3  4m ago     70s  ceph-01;ceph-02;ceph-03;count:3  </span><br><span class="line">mon                             1/3  4m ago     82s  ceph-01;ceph-02;ceph-03;count:3  </span><br><span class="line">node-exporter  ?:9100           1/2  4m ago     21m  *                                </span><br><span class="line">prometheus     ?:9095           1/1  4m ago     21m  count:1                     </span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建 osd</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@ceph-01 ~]# ceph orch daemon add osd ceph-01:/dev/vdb </span><br><span class="line">Created osd(s) 0 on host <span class="string">&#x27;ceph-01&#x27;</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch daemon add osd ceph-02:/dev/vdb </span><br><span class="line">Created osd(s) 1 on host <span class="string">&#x27;ceph-02&#x27;</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch daemon add osd ceph-03:/dev/vdb </span><br><span class="line">Created osd(s) 2 on host <span class="string">&#x27;ceph-03&#x27;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建 mds</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 首先创建 cephfs，不指定 pg 的话，默认会自动调整</span></span><br><span class="line"><span class="comment"># 集群中单个池的 PG 数计算公式如下：PG总数=（OSD数*100）/最大副本数/池数</span></span><br><span class="line">[root@ceph-01 ~]# ceph osd pool create cephfs_data 16</span><br><span class="line">pool <span class="string">&#x27;cephfs_data&#x27;</span> created</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# ceph osd pool create cephfs_metadata 16</span><br><span class="line">pool <span class="string">&#x27;cephfs_metadata&#x27;</span> created</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# ceph fs new cephfs cephfs_metadata cephfs_data</span><br><span class="line">new fs with metadata pool 3 and data pool 2</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# ceph <span class="built_in">df</span></span><br><span class="line">--- RAW STORAGE ---</span><br><span class="line">CLASS    SIZE   AVAIL     USED  RAW USED  %RAW USED</span><br><span class="line">hdd    30 GiB  30 GiB  133 MiB   133 MiB       0.43</span><br><span class="line">TOTAL  30 GiB  30 GiB  133 MiB   133 MiB       0.43</span><br><span class="line"> </span><br><span class="line">--- POOLS ---</span><br><span class="line">POOL                         ID  PGS   STORED  OBJECTS     USED  %USED  MAX AVAIL</span><br><span class="line">.mgr                          1    1  449 KiB        2  1.3 MiB      0    9.5 GiB</span><br><span class="line">cephfs_data                   2   32      0 B        0      0 B      0    9.5 GiB</span><br><span class="line">cephfs_metadata               3   16  4.3 KiB       22   96 KiB      0    9.5 GiB</span><br><span class="line">.rgw.root                     4   32  2.2 KiB       13  144 KiB      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.log             5   32   23 KiB      306  1.9 MiB      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.control         6   32      0 B        8      0 B      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.meta            7   32  1.3 KiB        7   72 KiB      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.buckets.index   8   32      0 B       11      0 B      0    9.5 GiB</span><br><span class="line">[root@ceph-01 ~]# </span><br><span class="line"></span><br><span class="line"><span class="comment"># 开启 mds 组件</span></span><br><span class="line"><span class="comment"># cephfs：文件系统名称</span></span><br><span class="line"><span class="comment"># --placement：指定集群内需要几个 mds，后面跟主机名</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch apply mds cephfs --placement=<span class="string">&quot;3 ceph-01 ceph-02 ceph-03&quot;</span></span><br><span class="line">Scheduled mds.cephfs update...</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看各节点是否已启用 mds 容器，还可以使用 ceph orch ps 查看某一节点运行的容器</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch ps --daemon-type mds</span><br><span class="line">NAME                       HOST     PORTS  STATUS         REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID  </span><br><span class="line">mds.cephfs.ceph-01.wvhlor  ceph-01         running (80s)    72s ago  81s    11.8M        -  17.2.5   cc65afd6173a  cf05e87d5f3d  </span><br><span class="line">mds.cephfs.ceph-02.idubtl  ceph-02         running (79s)    73s ago  79s    11.5M        -  17.2.5   cc65afd6173a  b766479a4ef2  </span><br><span class="line">mds.cephfs.ceph-03.woyaku  ceph-03         running (82s)    73s ago  82s    13.5M        -  17.2.5   cc65afd6173a  9db7d1a0fedf  </span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建 rgw</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个领域</span></span><br><span class="line">[root@ceph-01 ~]# radosgw-admin realm create --rgw-realm=myorg --default</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;id&quot;</span>: <span class="string">&quot;4cc868f8-462a-4491-845b-9e91d6a66564&quot;</span>,</span><br><span class="line">    <span class="string">&quot;name&quot;</span>: <span class="string">&quot;myorg&quot;</span>,</span><br><span class="line">    <span class="string">&quot;current_period&quot;</span>: <span class="string">&quot;f560e7b3-7b1b-45f5-adb6-57c91a2ae522&quot;</span>,</span><br><span class="line">    <span class="string">&quot;epoch&quot;</span>: 1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建区域组</span></span><br><span class="line">[root@ceph-01 ~]# radosgw-admin zonegroup create --rgw-zonegroup=default --master --default</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;id&quot;</span>: <span class="string">&quot;6a1f0262-d134-4d16-bb08-f818feb42695&quot;</span>,</span><br><span class="line">    <span class="string">&quot;name&quot;</span>: <span class="string">&quot;default&quot;</span>,</span><br><span class="line">    <span class="string">&quot;api_name&quot;</span>: <span class="string">&quot;default&quot;</span>,</span><br><span class="line">    <span class="string">&quot;is_master&quot;</span>: <span class="string">&quot;true&quot;</span>,</span><br><span class="line">    <span class="string">&quot;endpoints&quot;</span>: [],</span><br><span class="line">    <span class="string">&quot;hostnames&quot;</span>: [],</span><br><span class="line">    <span class="string">&quot;hostnames_s3website&quot;</span>: [],</span><br><span class="line">    <span class="string">&quot;master_zone&quot;</span>: <span class="string">&quot;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;zones&quot;</span>: [],</span><br><span class="line">    <span class="string">&quot;placement_targets&quot;</span>: [],</span><br><span class="line">    <span class="string">&quot;default_placement&quot;</span>: <span class="string">&quot;&quot;</span>,</span><br><span class="line">    <span class="string">&quot;realm_id&quot;</span>: <span class="string">&quot;4cc868f8-462a-4491-845b-9e91d6a66564&quot;</span>,</span><br><span class="line">    <span class="string">&quot;sync_policy&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;groups&quot;</span>: []</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建区域</span></span><br><span class="line">[root@ceph-01 ~]# radosgw-admin zone create --rgw-zonegroup=default --rgw-zone=cn-east-1 --master --default</span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;id&quot;</span>: <span class="string">&quot;6fc134ed-8f14-4c8d-a315-b2948d0a06cb&quot;</span>,</span><br><span class="line">    <span class="string">&quot;name&quot;</span>: <span class="string">&quot;cn-east-1&quot;</span>,</span><br><span class="line">    <span class="string">&quot;domain_root&quot;</span>: <span class="string">&quot;cn-east-1.rgw.meta:root&quot;</span>,</span><br><span class="line">    <span class="string">&quot;control_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.control&quot;</span>,</span><br><span class="line">    <span class="string">&quot;gc_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.log:gc&quot;</span>,</span><br><span class="line">    <span class="string">&quot;lc_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.log:lc&quot;</span>,</span><br><span class="line">    <span class="string">&quot;log_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.log&quot;</span>,</span><br><span class="line">    <span class="string">&quot;intent_log_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.log:intent&quot;</span>,</span><br><span class="line">    <span class="string">&quot;usage_log_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.log:usage&quot;</span>,</span><br><span class="line">    <span class="string">&quot;roles_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.meta:roles&quot;</span>,</span><br><span class="line">    <span class="string">&quot;reshard_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.log:reshard&quot;</span>,</span><br><span class="line">    <span class="string">&quot;user_keys_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.meta:users.keys&quot;</span>,</span><br><span class="line">    <span class="string">&quot;user_email_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.meta:users.email&quot;</span>,</span><br><span class="line">    <span class="string">&quot;user_swift_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.meta:users.swift&quot;</span>,</span><br><span class="line">    <span class="string">&quot;user_uid_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.meta:users.uid&quot;</span>,</span><br><span class="line">    <span class="string">&quot;otp_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.otp&quot;</span>,</span><br><span class="line">    <span class="string">&quot;system_key&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;access_key&quot;</span>: <span class="string">&quot;&quot;</span>,</span><br><span class="line">        <span class="string">&quot;secret_key&quot;</span>: <span class="string">&quot;&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&quot;placement_pools&quot;</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">&quot;key&quot;</span>: <span class="string">&quot;default-placement&quot;</span>,</span><br><span class="line">            <span class="string">&quot;val&quot;</span>: &#123;</span><br><span class="line">                <span class="string">&quot;index_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.buckets.index&quot;</span>,</span><br><span class="line">                <span class="string">&quot;storage_classes&quot;</span>: &#123;</span><br><span class="line">                    <span class="string">&quot;STANDARD&quot;</span>: &#123;</span><br><span class="line">                        <span class="string">&quot;data_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.buckets.data&quot;</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;,</span><br><span class="line">                <span class="string">&quot;data_extra_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.buckets.non-ec&quot;</span>,</span><br><span class="line">                <span class="string">&quot;index_type&quot;</span>: 0</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;realm_id&quot;</span>: <span class="string">&quot;4cc868f8-462a-4491-845b-9e91d6a66564&quot;</span>,</span><br><span class="line">    <span class="string">&quot;notif_pool&quot;</span>: <span class="string">&quot;cn-east-1.rgw.log:notif&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 为特定领域和区域部署 radosgw 守护程序</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch apply rgw myorg cn-east-1 --placement=<span class="string">&quot;3 ceph-01 ceph-02 ceph-03&quot;</span></span><br><span class="line">Scheduled rgw.myorg update...</span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证各节点是否启动 rgw 容器</span></span><br><span class="line">[root@ceph-01 ~]# ceph orch ps --daemon-type rgw</span><br><span class="line">NAME                      HOST     PORTS  STATUS        REFRESHED  AGE  MEM USE  MEM LIM  VERSION  IMAGE ID      CONTAINER ID  </span><br><span class="line">rgw.myorg.ceph-01.ijvgni  ceph-01  *:80   running (8m)    33s ago   8m    90.8M        -  17.2.5   cc65afd6173a  9cc08bcf3ff1  </span><br><span class="line">rgw.myorg.ceph-02.nbxmae  ceph-02  *:80   running (8m)    48s ago   8m    97.1M        -  17.2.5   cc65afd6173a  2afe3832e810  </span><br><span class="line">rgw.myorg.ceph-03.gpxahk  ceph-03  *:80   running (8m)    50s ago   8m    92.5M        -  17.2.5   cc65afd6173a  66ca66f2f50d</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>为所有节点安装 ceph-common 包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[root@ceph-01 ~]# scp /etc/yum.repos.d/ceph.repo ceph-02:/etc/yum.repos.d/</span><br><span class="line">[root@ceph-01 ~]# scp /etc/yum.repos.d/ceph.repo ceph-03:/etc/yum.repos.d/</span><br><span class="line"></span><br><span class="line">[root@ceph-02 ~]# yum install ceph-common -y</span><br><span class="line">[root@ceph-03 ~]# yum install ceph-common -y</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# scp /etc/ceph/ceph.conf ceph-02:/etc/ceph/</span><br><span class="line">[root@ceph-01 ~]# scp /etc/ceph/ceph.conf ceph-03:/etc/ceph/</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# scp /etc/ceph/ceph.client.admin.keyring ceph-02:/etc/ceph/</span><br><span class="line">[root@ceph-01 ~]# scp /etc/ceph/ceph.client.admin.keyring ceph-03:/etc/ceph/</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>测试</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[root@ceph-01 ~]# ceph -s</span><br><span class="line">  cluster:</span><br><span class="line">    <span class="built_in">id</span>:     642858bc-9714-11ed-9e73-fa163e075f6d</span><br><span class="line">    health: HEALTH_OK</span><br><span class="line"> </span><br><span class="line">  services:</span><br><span class="line">    mon: 3 daemons, quorum ceph-01,ceph-03,ceph-02 (age 10m)</span><br><span class="line">    mgr: ceph-03.dkhqhc(active, since 10m), standbys: ceph-02.vokncq, ceph-01.fsikhk</span><br><span class="line">    mds: 1/1 daemons up, 2 standby</span><br><span class="line">    osd: 3 osds: 3 up (since 10m), 3 <span class="keyword">in</span> (since 60m)</span><br><span class="line">    rgw: 3 daemons active (3 hosts, 1 zones)</span><br><span class="line"> </span><br><span class="line">  data:</span><br><span class="line">    volumes: 1/1 healthy</span><br><span class="line">    pools:   7 pools, 177 pgs</span><br><span class="line">    objects: 224 objects, 459 KiB</span><br><span class="line">    usage:   118 MiB used, 30 GiB / 30 GiB avail</span><br><span class="line">    pgs:     177 active+clean</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>常用命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 列出集群内运行的组件</span></span><br><span class="line">ceph orch <span class="built_in">ls</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出集群内的主机</span></span><br><span class="line">ceph orch host <span class="built_in">ls</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出集群内容器的详细信息</span></span><br><span class="line">ceph orch ps</span><br><span class="line"></span><br><span class="line"><span class="comment"># 调整组件的数量</span></span><br><span class="line">ceph orch apply mon --placement=<span class="string">&quot;3 node1 node2 node3&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --daemon-type：指定查看的组件</span></span><br><span class="line">ceph orch ps --daemon-type rgw</span><br><span class="line"></span><br><span class="line"><span class="comment"># 给某个主机指定标签</span></span><br><span class="line">ceph orch host label add node1 mon</span><br><span class="line"></span><br><span class="line"><span class="comment"># 告诉cephadm根据标签部署mon,修改后只有包含mon的主机才会成为mon，不过原来启动的mon现在暂时不会关闭</span></span><br><span class="line">ceph orch apply mon label:mon</span><br><span class="line"></span><br><span class="line"><span class="comment"># 列出集群内的存储设备</span></span><br><span class="line">ceph orch device <span class="built_in">ls</span></span><br><span class="line"></span><br><span class="line">例如，要在newhost1IP地址10.1.2.123上部署第二台监视器，并newhost2在网络10.1.2.0/24中部署第三台monitor</span><br><span class="line">ceph orch apply mon --unmanaged    <span class="comment">#禁用mon自动部署</span></span><br><span class="line">ceph orch daemon add mon newhost1:10.1.2.123</span><br><span class="line">ceph orch daemon add mon newhost2:10.1.2.0/24</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>启用 CephFS</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 请确认至少有一个节点启用了 mds 服务，集群中单个池的 PG 数计算公式如下：PG总数=（OSD数*100）/最大副本数/池数</span></span><br><span class="line"><span class="comment"># 在 ceph 集群，其中一个节点执行即可。</span></span><br><span class="line"><span class="comment"># 首先创建 cephfs，不指定 pg 的话，默认会自动调整</span></span><br><span class="line">[root@ceph-01 ~]# ceph osd pool create cephfs_data 16</span><br><span class="line">pool <span class="string">&#x27;cephfs_data&#x27;</span> created</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# ceph osd pool create cephfs_metadata 16</span><br><span class="line">pool <span class="string">&#x27;cephfs_metadata&#x27;</span> created</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# ceph fs new cephfs cephfs_metadata cephfs_data</span><br><span class="line">new fs with metadata pool 3 and data pool 2</span><br><span class="line"></span><br><span class="line">[root@ceph-01 ~]# ceph <span class="built_in">df</span></span><br><span class="line">--- RAW STORAGE ---</span><br><span class="line">CLASS    SIZE   AVAIL     USED  RAW USED  %RAW USED</span><br><span class="line">hdd    30 GiB  30 GiB  133 MiB   133 MiB       0.43</span><br><span class="line">TOTAL  30 GiB  30 GiB  133 MiB   133 MiB       0.43</span><br><span class="line"> </span><br><span class="line">--- POOLS ---</span><br><span class="line">POOL                         ID  PGS   STORED  OBJECTS     USED  %USED  MAX AVAIL</span><br><span class="line">.mgr                          1    1  449 KiB        2  1.3 MiB      0    9.5 GiB</span><br><span class="line">cephfs_data                   2   32      0 B        0      0 B      0    9.5 GiB</span><br><span class="line">cephfs_metadata               3   16  4.3 KiB       22   96 KiB      0    9.5 GiB</span><br><span class="line">.rgw.root                     4   32  2.2 KiB       13  144 KiB      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.log             5   32   23 KiB      306  1.9 MiB      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.control         6   32      0 B        8      0 B      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.meta            7   32  1.3 KiB        7   72 KiB      0    9.5 GiB</span><br><span class="line">cn-east-1.rgw.buckets.index   8   32      0 B       11      0 B      0    9.5 GiB</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 挂载 CephFS</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>启用块存储</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 ceph 集群，其中一台执行命令即可</span></span><br><span class="line"><span class="comment"># 初始化 rbd 池</span></span><br><span class="line">[root@ceph-01 ~]# ceph osd pool create rbd_storage 16 16 replicated</span><br><span class="line">pool <span class="string">&#x27;rbd_storage&#x27;</span> created</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建一个块设备</span></span><br><span class="line">[root@ceph-01 ~]# rbd create --size 1024 rbd_image -p rbd_storage</span><br><span class="line">[root@ceph-01 ~]# rbd <span class="built_in">ls</span> rbd_storage</span><br><span class="line">rbd_image</span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除命令</span></span><br><span class="line">[root@ceph-01 ~]# rbd <span class="built_in">rm</span> rbd_storage/rbd_image</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 挂载 rbd 块设备</span></span><br><span class="line"><span class="comment"># 将块设备映射到系统内核</span></span><br><span class="line">[root@ceph-01 ~]# rbd map rbd_storage/rbd_image</span><br><span class="line">/dev/rbd0</span><br><span class="line">[root@ceph-01 ~]# lsblk | grep rbd</span><br><span class="line">rbd0                                                               251:0    0   1G  0 disk </span><br><span class="line"></span><br><span class="line"><span class="comment"># 格式化 rbd 设备</span></span><br><span class="line">[root@ceph-01 ~]# mkfs.ext4 -m0 /dev/rbd/rbd_storage/rbd_image </span><br><span class="line">mke2fs 1.45.6 (20-Mar-2020)</span><br><span class="line">Discarding device blocks: <span class="keyword">done</span>                            </span><br><span class="line">Creating filesystem with 262144 4k blocks and 65536 inodes</span><br><span class="line">Filesystem UUID: edd56aad-cbd4-4f69-b950-de46d9098f1c</span><br><span class="line">Superblock backups stored on blocks: </span><br><span class="line">	32768, 98304, 163840, 229376</span><br><span class="line"></span><br><span class="line">Allocating group tables: <span class="keyword">done</span>                            </span><br><span class="line">Writing inode tables: <span class="keyword">done</span>                            </span><br><span class="line">Creating journal (8192 blocks): <span class="keyword">done</span></span><br><span class="line">Writing superblocks and filesystem accounting information: <span class="keyword">done</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 挂载 rbd 设备</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 取消内核挂载</span></span><br><span class="line">rbd unmap /dev/rbd0</span><br></pre></td></tr></table></figure></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+<div>
+  
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束-------------</div>
+    
+</div>
+
+  
+</div>
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Ceph/" rel="tag"><i class="fa fa-tag"></i> Ceph</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2023/06/05/%E9%BA%92%E9%BA%9FV10%E9%83%A8%E7%BD%B2openGauss/" rel="next" title="麒麟V10部署openGauss">
+                <i class="fa fa-chevron-left"></i> 麒麟V10部署openGauss
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2023/09/25/Apache%E5%92%8CNginx%E5%88%B7%E6%96%B0%E9%A1%B5%E9%9D%A2%E5%87%BA%E7%8E%B0404%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" rel="prev" title="Apache 和 Nginx 下 vue 页面刷新出现 404 解决办法">
+                Apache 和 Nginx 下 vue 页面刷新出现 404 解决办法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/logo.png"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%20%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yourname" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://plus.google.com/yourname" target="_blank" title="Google">
+                      
+                        <i class="fa fa-fw fa-google"></i>Google</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://youtube.com/yourname" target="_blank" title="YouTube">
+                      
+                        <i class="fa fa-fw fa-youtube"></i>YouTube</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+<script>
+    (function(){
+        if(''){
+            if (prompt('请输入文章密码') !== ''){
+                alert('密码错误！');
+                history.back();
+            }
+        }
+    })();
+</script>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="OS ," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="部署 chrony 服务端 安装 123456# CentOS&#x2F;RHELyum install chrony# Ubuntu&#x2F;Debianapt updateapt install chrony  配置 vim &#x2F;etc&#x2F;chrony.conf 12345678910111213141516# minpoll 4：最小轮询间隔是 2⁴ 秒 &#x3D; 16 秒# maxpoll 10：最大轮询间隔是 2¹">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 时间同步 chrony">
+<meta property="og:url" content="http://example.com/2022/04/05/chrony/index.html">
+<meta property="og:site_name" content="CJ">
+<meta property="og:description" content="部署 chrony 服务端 安装 123456# CentOS&#x2F;RHELyum install chrony# Ubuntu&#x2F;Debianapt updateapt install chrony  配置 vim &#x2F;etc&#x2F;chrony.conf 12345678910111213141516# minpoll 4：最小轮询间隔是 2⁴ 秒 &#x3D; 16 秒# maxpoll 10：最大轮询间隔是 2¹">
+<meta property="og:locale">
+<meta property="article:published_time" content="2022-04-05T10:47:33.000Z">
+<meta property="article:modified_time" content="2025-09-16T09:08:57.840Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="OS ">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://example.com/2022/04/05/chrony/"/>
+
+
+
+
+
+  <title>Linux 时间同步 chrony | CJ</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.0.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CJ</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a href="/sitemap.xml%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br />
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/05/chrony/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/logo.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CJ">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux 时间同步 chrony</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2022-04-05T18:47:33+08:00">
+                2022-04-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS </span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="部署-chrony-服务端"><a href="#部署-chrony-服务端" class="headerlink" title="部署 chrony 服务端"></a>部署 chrony 服务端</h2><ul>
+<li><p>安装</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># CentOS/RHEL</span></span><br><span class="line">yum install chrony</span><br><span class="line"></span><br><span class="line"><span class="comment"># Ubuntu/Debian</span></span><br><span class="line">apt update</span><br><span class="line">apt install chrony</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置</p>
+<p><code>vim /etc/chrony.conf</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># minpoll 4：最小轮询间隔是 2⁴ 秒 = 16 秒</span></span><br><span class="line"><span class="comment"># maxpoll 10：最大轮询间隔是 2¹⁰ 秒 = 1024 秒</span></span><br><span class="line"><span class="comment"># iburst：启动时快速发送一组 NTP 请求包（默认4个），更快获得同步结果</span></span><br><span class="line"><span class="comment"># 表示 chronyd 会在 16 到 1024 秒之间动态调整与上游的同步间隔</span></span><br><span class="line">server ntp.ntsc.ac.cn minpoll 4 maxpoll 10 iburst</span><br><span class="line">server ntp.aliyun.com minpoll 4 maxpoll 10 iburst</span><br><span class="line"></span><br><span class="line">allow 192.168.1.0/24</span><br><span class="line"></span><br><span class="line">deny all;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 当本地机器无法连接到任何上游 NTP 服务器时，将使用本地时钟作为时间源，指定了本地时钟的“阶层”，数值越大越不可靠</span></span><br><span class="line"><span class="built_in">local</span> stratum 10</span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定日志路径</span></span><br><span class="line">logdir /var/log/chrony</span><br></pre></td></tr></table></figure></li>
+</ul>
+<span id="more"></span>
+
+<ul>
+<li><p>启动服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl <span class="built_in">enable</span> --now chronyd</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>开放 NTP 端口（UDP：123）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># CentOS/RHEL</span></span><br><span class="line">firewall-cmd --add-service=ntp --permanent</span><br><span class="line">firewall-cmd --reload</span><br><span class="line"></span><br><span class="line"><span class="comment"># Ubuntu/Debian</span></span><br><span class="line">ufw allow 123/udp</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>手动同步时间</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chronyc makestep</span><br></pre></td></tr></table></figure>
+
+<p><strong>当系统返回 200 ok 时，表示 chrony 服务已手动同步完成</strong></p>
+</li>
+</ul>
+<h2 id="部署客户端"><a href="#部署客户端" class="headerlink" title="部署客户端"></a>部署客户端</h2><ul>
+<li><p>安装 chrony 包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install chrony</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>配置</p>
+<p><code>vim /etc/chrony.conf</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加 chrony 服务端</span></span><br><span class="line">server 192.168.1.1 iburst</span><br><span class="line"></span><br><span class="line"><span class="comment"># 记录 drift 文件</span></span><br><span class="line">driftfile /var/lib/chrony/drift</span><br><span class="line">logdir /var/log/chrony</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>启动服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl <span class="built_in">enable</span> --now chronyd</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="验证同步状态"><a href="#验证同步状态" class="headerlink" title="验证同步状态"></a>验证同步状态</h2><ul>
+<li><p>显示本地机器与时间源同步的整体状态</p>
+<p><code>chronyc tracking</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 输出</span></span><br><span class="line">Reference ID    : CB6B0658 (192.168.1.1)			<span class="comment"># 当前同步的上游服务器 IP</span></span><br><span class="line">Stratum         : 3						<span class="comment"># 阶层，数字越小越接近标准时间</span></span><br><span class="line">Ref <span class="keyword">time</span> (UTC)  : Mon May 12 08:57:42 2025</span><br><span class="line">System <span class="keyword">time</span>     : 0.000278988 seconds slow of NTP <span class="keyword">time</span>	<span class="comment"># 系统当前与 NTP 服务器的时间差</span></span><br><span class="line">Last offset     : -0.001049707 seconds</span><br><span class="line">RMS offset      : 0.001369402 seconds</span><br><span class="line">Frequency       : 15.327 ppm slow				<span class="comment"># 本机硬件时钟与真实时间之间的偏差</span></span><br><span class="line">Residual freq   : +2.504 ppm</span><br><span class="line">Skew            : 6.348 ppm</span><br><span class="line">Root delay      : 0.052412711 seconds</span><br><span class="line">Root dispersion : 0.002118363 seconds</span><br><span class="line">Update interval : 64.3 seconds</span><br><span class="line">Leap status     : Normal					<span class="comment"># 是否准备插入/删除闰秒（Normal 表示正常）</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>列出所有可用的时间源及详细状态</p>
+<p><code>chronyc -n sources -v</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 输出</span></span><br><span class="line">  .-- Source mode  <span class="string">&#x27;^&#x27;</span> = server, <span class="string">&#x27;=&#x27;</span> = peer, <span class="string">&#x27;#&#x27;</span> = <span class="built_in">local</span> clock.</span><br><span class="line"> / .- Source state <span class="string">&#x27;*&#x27;</span> = current best, <span class="string">&#x27;+&#x27;</span> = combined, <span class="string">&#x27;-&#x27;</span> = not combined,</span><br><span class="line">| /             <span class="string">&#x27;x&#x27;</span> = may be <span class="keyword">in</span> error, <span class="string">&#x27;~&#x27;</span> = too variable, <span class="string">&#x27;?&#x27;</span> = unusable.</span><br><span class="line">||                                                 .- xxxx [ yyyy ] +/- zzzz</span><br><span class="line">||      Reachability register (octal) -.           |  xxxx = adjusted offset,</span><br><span class="line">||      Log2(Polling interval) --.      |          |  yyyy = measured offset,</span><br><span class="line">||                                \     |          |  zzzz = estimated error.</span><br><span class="line">||                                 |    |           \</span><br><span class="line">MS Name/IP address         Stratum Poll Reach LastRx Last sample               </span><br><span class="line">===============================================================================</span><br><span class="line">^* 192.168.1.1                  0   8   377     -     +0ns[   +0ns] +/-    0ns</span><br><span class="line"></span><br><span class="line">MS:</span><br><span class="line">	^*：表示当前正在使用的主服务器</span><br><span class="line">	^+：表示候选时间源</span><br><span class="line">	^-：表示已连接但未选为同步源</span><br><span class="line">	^?：表示不可用</span><br><span class="line">	</span><br><span class="line">Name/IP：时间源地址</span><br><span class="line">Stratum：阶层</span><br><span class="line">Poll：轮询间隔</span><br><span class="line">Reach：表示最近 8 次通信的成功位图（八进制 377 表示全部成功）</span><br><span class="line">LastRx：上一次收到响应的时间（秒）</span><br><span class="line">Last sample：最后一次采样时间差（括号内为修正值），后面的 +/- 是误差范围</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>显示每个时间源的性能统计数据，如偏差、漂移等，用于分析同步质量</p>
+<p><code>chronyc sourcestats -v</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 输出</span></span><br><span class="line">Name/IP Address            NP  NR  Span  Frequency  Freq Skew  Offset  Std Dev</span><br><span class="line">===============================================================================</span><br><span class="line">192.168.1.1                 8   4   256    -0.012     0.123     -10us    3us</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">NP：样本总数</span><br><span class="line">NR：有效样本数</span><br><span class="line">Span：覆盖的时间范围（秒）</span><br><span class="line">Frequency：服务器频率误差估计（ppm）</span><br><span class="line">Freq Skew：频率漂移估计（ppm）</span><br><span class="line">Offset：本机时间与该源的平均时间偏移</span><br><span class="line">Std Dev：偏移的标准差（数值越小越稳定）</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>查看当前系统时区</p>
+<p><code>timedatectl status</code></p>
+</li>
+<li><p>设置系统时区</p>
+<p><code>timedatectl set-timezone Asia/Shanghai</code></p>
+</li>
+</ul>
+<h2 id="公共授时服务器"><a href="#公共授时服务器" class="headerlink" title="公共授时服务器"></a>公共授时服务器</h2><ul>
+<li><p>中国</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 国家授时中心</span></span><br><span class="line">ntp.ntsc.ac.cn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 中国 NTP 快速授时服务</span></span><br><span class="line">cn.ntp.org.cn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 教育网</span></span><br><span class="line">edu.ntp.org.cn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 香港地区</span></span><br><span class="line">hk.ntp.org.cn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 香港天文台公共 NTP 服务器</span></span><br><span class="line">stdtime.gov.hk</span><br><span class="line"></span><br><span class="line"><span class="comment"># 澳门地球气象局公共 NTP 服务器</span></span><br><span class="line">time.smg.gov.mo</span><br><span class="line"></span><br><span class="line"><span class="comment"># 台湾地区</span></span><br><span class="line">tw.ntp.org.cn</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>日本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">jp.ntp.org.cn</span><br><span class="line"></span><br><span class="line"><span class="comment"># 日本国家信息通信技术研究所</span></span><br><span class="line">ntp.nict.jp</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>韩国</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kr.ntp.org.cn</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新加坡</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sgp.ntp.org.cn</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>美国</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">us.ntp.org.cn</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>德国</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">de.ntp.org.cn</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>印度尼西亚</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ina.ntp.org.cn</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>国际 NTP 快速授时服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pool.ntp.org</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>阿里云公共 NTP 服务器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntp.aliyun.com</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>腾讯云公共 NTP 服务器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ntp.tencent.com</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>谷歌公共 NTP 服务器</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">time1.google.com</span><br><span class="line">time2.google.com</span><br><span class="line">time3.google.com</span><br></pre></td></tr></table></figure></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+<div>
+  
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束-------------</div>
+    
+</div>
+
+  
+</div>
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/OS/" rel="tag"><i class="fa fa-tag"></i> OS </a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2022/04/06/%E5%B9%B3%E6%BB%91%E5%8D%87%E7%BA%A7Nginx/" rel="prev" title="平滑升级Nginx">
+                平滑升级Nginx <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/logo.png"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%20%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yourname" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://plus.google.com/yourname" target="_blank" title="Google">
+                      
+                        <i class="fa fa-fw fa-google"></i>Google</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://youtube.com/yourname" target="_blank" title="YouTube">
+                      
+                        <i class="fa fa-fw fa-youtube"></i>YouTube</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2-chrony-%E6%9C%8D%E5%8A%A1%E7%AB%AF"><span class="nav-number">1.</span> <span class="nav-text">部署 chrony 服务端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">2.</span> <span class="nav-text">部署客户端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E5%90%8C%E6%AD%A5%E7%8A%B6%E6%80%81"><span class="nav-number">3.</span> <span class="nav-text">验证同步状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AC%E5%85%B1%E6%8E%88%E6%97%B6%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text">公共授时服务器</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
