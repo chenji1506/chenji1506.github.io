@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="定时任务," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="systemd timer 原理在 Linux 中，使用 systemd 创建定时任务（即替代传统的 crontab）主要是通过两个单元（unit）文件来实现：  Service 单元（.service）： 定义要执行的服务或命令  Timer 单元（.timer）： 定义何时执行该任务   原理：systemd 定期检查每个 .timer单元中定义的规则，以确定是否触发相应的定时器，一旦定时器触">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 systemd 创建定时任务">
+<meta property="og:url" content="http://example.com/2025/06/15/%E4%BD%BF%E7%94%A8systemd%E5%88%9B%E5%BB%BA%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1/index.html">
+<meta property="og:site_name" content="CJ">
+<meta property="og:description" content="systemd timer 原理在 Linux 中，使用 systemd 创建定时任务（即替代传统的 crontab）主要是通过两个单元（unit）文件来实现：  Service 单元（.service）： 定义要执行的服务或命令  Timer 单元（.timer）： 定义何时执行该任务   原理：systemd 定期检查每个 .timer单元中定义的规则，以确定是否触发相应的定时器，一旦定时器触">
+<meta property="og:locale">
+<meta property="article:published_time" content="2025-06-15T04:29:14.000Z">
+<meta property="article:modified_time" content="2025-09-16T09:05:33.521Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="定时任务">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://example.com/2025/06/15/使用systemd创建定时任务/"/>
+
+
+
+
+
+  <title>使用 systemd 创建定时任务 | CJ</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 8.0.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CJ</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-sitemap">
+          <a href="/sitemap.xml%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-sitemap"></i> <br />
+            
+            站点地图
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/06/15/%E4%BD%BF%E7%94%A8systemd%E5%88%9B%E5%BB%BA%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CJ">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">使用 systemd 创建定时任务</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2025-06-15T12:29:14+08:00">
+                2025-06-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/OS/" itemprop="url" rel="index">
+                    <span itemprop="name">OS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="systemd-timer-原理"><a href="#systemd-timer-原理" class="headerlink" title="systemd timer 原理"></a>systemd timer 原理</h2><p>在 Linux 中，使用 <code>systemd</code> 创建定时任务（即替代传统的 <code>crontab</code>）主要是通过两个单元（unit）文件来实现：</p>
+<ul>
+<li><p>Service 单元（.service）：</p>
+<p>定义要执行的服务或命令</p>
+</li>
+<li><p>Timer 单元（.timer）：</p>
+<p>定义何时执行该任务</p>
+</li>
+</ul>
+<p><strong>原理：systemd 定期检查每个 <code>.timer</code>单元中定义的规则，以确定是否触发相应的定时器，一旦定时器触发，systemd 将启动与该定时器关联的<code>.service</code>单元，从而执行预定的任务。</strong></p>
+<span id="more"></span>
+
+<p>与 cron 相比，优点如下：</p>
+<blockquote>
+<ol>
+<li><p>精确到秒</p>
+</li>
+<li><p>灵活的时间表达，同时支持多个表达式</p>
+<p><code>OnCalendar=</code>支持复杂的时间表达式，如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 表示每天凌晨 3 点和每周一中午 12 点都执行一次</span></span><br><span class="line">OnCalendar=*-*-* 03:00:00; Mon *-*-* 12:00:00</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>日志记录集成</p>
+<p>自动集成到 journalctl，方便追踪</p>
+</li>
+<li><p>失败重试机制</p>
+<p>可通过 Restart&#x3D; 配置失败重试</p>
+</li>
+<li><p>错过可以补跑</p>
+<p><code>Persistent=true</code>可实现</p>
+</li>
+<li><p>启动&#x2F;停止控制</p>
+<p>可随时通过 start&#x2F;stop 启动&#x2F;停止服务</p>
+</li>
+</ol>
+</blockquote>
+<h2 id="systmd-单元"><a href="#systmd-单元" class="headerlink" title="systmd 单元"></a>systmd 单元</h2><p>单元就是 systemd 最小管理单位，是单个进程的描述，一个个单元相互调用和依赖，组成一个庞大的任务管理系统。</p>
+<p>systemd 中的 unit 有很多类型，下面是一些常见的 unit 类型：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">.service		service 单元，也就是我们常说的系统服务</span><br><span class="line"></span><br><span class="line">.target			target 单元，其实就是一堆 unit 的集合，比如常见的 multi-user.target</span><br><span class="line"></span><br><span class="line">.timer			timer 单元，负责定时任务</span><br><span class="line"></span><br><span class="line">.slice			slice 单元，负责资源的分配</span><br></pre></td></tr></table></figure>
+
+<p>每个 unit 都有一个描述文件，它们分散在以下几个目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/etc/systemd/system					包含用户自定义的 unit 文件，如果设置了开机自启动，则该目录下的 unit 描述文件会创建一个符号链接</span><br><span class="line"></span><br><span class="line">/usr/lib/systemd/system				用户自己定义的 unit 文件，也会包含一些系统默认的 unit 文件</span><br></pre></td></tr></table></figure>
+
+<p>查看所有的 unit</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl list-unit-files</span><br></pre></td></tr></table></figure>
+
+<p>查看所有的 service unit</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl list-unit-files --<span class="built_in">type</span> service</span><br></pre></td></tr></table></figure>
+
+<p>查看所有的 timer unit</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl list-unit-files --<span class="built_in">type</span> timer</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="设置定时任务"><a href="#设置定时任务" class="headerlink" title="设置定时任务"></a>设置定时任务</h2><p>定时执行 backup.sh 脚本，用于备份数据库</p>
+<ul>
+<li><p>先创建一个 service unit </p>
+<p><code>vim /etc/systemd/system/backup.service</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=Run backup script</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line"><span class="comment"># 表示任务执行一次后就退出</span></span><br><span class="line">Type=oneshot</span><br><span class="line"></span><br><span class="line"><span class="comment"># 要运行的脚本路径</span></span><br><span class="line">ExecStart=/opt/scripts/backup.sh</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建一个 timer unit</p>
+<p><code>vim /etc/systemd/system/backup.timer</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=Run backup script every 5 minutes</span><br><span class="line"></span><br><span class="line">[Timer]</span><br><span class="line">OnCalendar=*:0/5</span><br><span class="line"></span><br><span class="line"><span class="comment"># 如果系统在计划时间关机了，下次开机时自动补一次</span></span><br><span class="line">Persistent=<span class="literal">true</span></span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line"><span class="comment"># 允许用 enable 启动定时器</span></span><br><span class="line">WantedBy=timers.target</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>[timer]部分</p>
+<blockquote>
+<p>OnActiveSec                                # 定时任务生效后，多少时间开始执行任务</p>
+<p>OnBootSec                                  # 系统启动后，多少时间开始执行任务</p>
+<p>OnStartupSec                             # Systemd 进程启动后，多少时间开始执行任务</p>
+<p>OnUnitActiveSec                        # 该 unit 上次执行后，等多少时间再次执行</p>
+<p>OnUnitInactiveSec                     # 定时任务上次关闭后多少时间，再次执行</p>
+<p>OnCalendar                                # 基于绝对时间，而不是相对时间执行</p>
+<p>AccuracySec                               # 如果因为各种原因，任务必须推迟执行，推迟的最大秒数，默认是60秒</p>
+<p>Unit                                            # 真正要执行的任务，默认是同名的带有<code>.service</code> 后缀的 unit</p>
+<p>Persistent                                    # 如果设置了该字段，即使定时任务到时没有启动，也会自动执行相应的 unit</p>
+<p>WakeSystem                              # 如果系统休眠，是否自动唤醒系统</p>
+</blockquote>
+</li>
+<li><p>.service 和 .timer 文件名是否必须要一致：</p>
+<p>不必完全一致，但强烈建议保持一致，虽然 systemd 不强制 <code>.timer</code>和<code>.service</code>文件名称相同，但如果名称一致，系统会自动知道<code>.timer</code>对应的是哪个<code>.service</code></p>
+</li>
+<li><p>如果文件名不一致时，怎么办：</p>
+<p>可以通过<code>Unit=</code>显式指定<code>.service</code>的名称，如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=Custom timer</span><br><span class="line"></span><br><span class="line">[Timer]</span><br><span class="line">OnCalendar=*:0/5</span><br><span class="line">Unit=backup.service  			<span class="comment"># 指定目标任务为 backup.service</span></span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=timers.target</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="OnCalendar-语法格式"><a href="#OnCalendar-语法格式" class="headerlink" title="OnCalendar 语法格式"></a>OnCalendar 语法格式</h2><blockquote>
+<p>格式：DayOfWeek Year-Month-Day Hour:Minute:Second</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>说明</th>
+<th>示例</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DayOfWeek</code></td>
+<td>星期几，可用 Mon-Sun 或 0-6（0表示 Sunday）</td>
+<td>Mon<code>, </code>Fri<code>, </code>Mon..Fri<code>, </code>Mon,Wed,Fri</td>
+<td>*（每天）</td>
+</tr>
+<tr>
+<td><code>Year</code></td>
+<td>年份，4位数字</td>
+<td>2025<code>, </code>2024..2026<code>, </code>2025,2027</td>
+<td>*</td>
+</tr>
+<tr>
+<td><code>Month</code></td>
+<td>月份，1-12 或 Jan-Dec</td>
+<td>1<code>, </code>06<code>, </code>Jan<code>, </code>Jun<code>, </code>1,3,5</td>
+<td>*</td>
+</tr>
+<tr>
+<td><code>Day</code></td>
+<td>天，1-31</td>
+<td>15<code>, </code>1..5<code>, </code>1,15,30</td>
+<td>*</td>
+</tr>
+<tr>
+<td><code>Hour</code></td>
+<td>小时，0-23</td>
+<td>10<code>, </code>20<code>, </code>8..12</td>
+<td>00</td>
+</tr>
+<tr>
+<td><code>Minute</code></td>
+<td>分钟，0-59</td>
+<td>00<code>, </code>15<code>, </code>0..30</td>
+<td>00</td>
+</tr>
+<tr>
+<td><code>Second</code></td>
+<td>秒，0-59</td>
+<td>00<code>, </code>30</td>
+<td>00</td>
+</tr>
+</tbody></table>
+<p>通配符</p>
+<table>
+<thead>
+<tr>
+<th>语法</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>*</td>
+<td>任意值</td>
+<td><code>*-*-*</code>：任意日期</td>
+</tr>
+<tr>
+<td>..</td>
+<td>范围</td>
+<td><code>1..5</code>：1 到 5</td>
+</tr>
+<tr>
+<td>,</td>
+<td>多个值</td>
+<td><code>Mon,Wed,Fri</code>：每周一三五</td>
+</tr>
+<tr>
+<td>*&#x2F;n</td>
+<td>间隔</td>
+<td><code>*/2</code>：每 2 单位（如每 2 天）</td>
+</tr>
+</tbody></table>
+<p>支持的快捷关键词</p>
+<table>
+<thead>
+<tr>
+<th>快捷词</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>minutely</code></td>
+<td>每分钟</td>
+<td><code>*-*-* *:*:00</code></td>
+</tr>
+<tr>
+<td><code>hourly</code></td>
+<td>每小时</td>
+<td><code>*-*-* *:00:00</code></td>
+</tr>
+<tr>
+<td><code>daily</code></td>
+<td>每天</td>
+<td><code>*-*-* 00:00:00</code></td>
+</tr>
+<tr>
+<td><code>weekly</code></td>
+<td>每周一</td>
+<td><code>Mon *-*-* 00:00:00</code></td>
+</tr>
+<tr>
+<td><code>monthly</code></td>
+<td>每月 1 日</td>
+<td><code>*-*-01 00:00:00</code></td>
+</tr>
+<tr>
+<td>yearly<code>, </code>annually</td>
+<td>每年 1 月 1 日</td>
+<td><code>*-01-01 00:00:00</code></td>
+</tr>
+</tbody></table>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><ul>
+<li><p>每天上午 10 点整执行一次</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OnCalendar=*-*-* 10:00:00</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>每小时 0 分 0 秒执行一次</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OnCalendar=hourly</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>每周一 00:00 执行一次</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OnCalendar=Mon</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>每月最后一天晚上11点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OnCalendar=*-*-last 23:00:00</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>每周六和周日中午12点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OnCalendar=Sat,Sun 12:00</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>每月的第一个周五晚上10点</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OnCalendar=Fri *-*-01..07 22:00</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="启动和停止"><a href="#启动和停止" class="headerlink" title="启动和停止"></a>启动和停止</h2><ul>
+<li><p>启动和测试</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 重载 systemd 配置</span></span><br><span class="line">systemctl daemon-reexec</span><br><span class="line">systemctl daemon-reload</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启用并启动定时器</span></span><br><span class="line">systemctl <span class="built_in">enable</span> --now backup.timer</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看定时器状态</span></span><br><span class="line">systemctl list-timers --all</span><br><span class="line"></span><br><span class="line"><span class="comment"># 可以手动触发执行一次</span></span><br><span class="line">systemctl start backup.service</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看日志</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl -u backup.service</span><br></pre></td></tr></table></figure></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1/" rel="tag"># 定时任务</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%20%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yourname" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://plus.google.com/yourname" target="_blank" title="Google">
+                      
+                        <i class="fa fa-fw fa-google"></i>Google</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://youtube.com/yourname" target="_blank" title="YouTube">
+                      
+                        <i class="fa fa-fw fa-youtube"></i>YouTube</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#systemd-timer-%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">systemd timer 原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#systmd-%E5%8D%95%E5%85%83"><span class="nav-number">2.</span> <span class="nav-text">systmd 单元</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="nav-number">3.</span> <span class="nav-text">设置定时任务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OnCalendar-%E8%AF%AD%E6%B3%95%E6%A0%BC%E5%BC%8F"><span class="nav-number">4.</span> <span class="nav-text">OnCalendar 语法格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B"><span class="nav-number">5.</span> <span class="nav-text">示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%92%8C%E5%81%9C%E6%AD%A2"><span class="nav-number">6.</span> <span class="nav-text">启动和停止</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
